@@ -3,24 +3,30 @@ import { streamText } from 'ai';
 import axios from 'axios';
 
 export async function POST(req: Request) {
-    console.log("reqJson:",await req.json())
-    const { messages, id } = await req.json();
+    const { messages, gameId } = await req.json();
 
-    console.log(JSON.stringify(messages, null, 4))
-    console.log(`messagesLength: ${messages.length}`)
+    console.log("Вроде то, что ввёл пользователь:", JSON.stringify(messages[messages.length-1], null, 4))
+
+    const game = await axios.get(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000`, {
+        params: {gameId}
+    })
 
     let result = streamText({
-        model: groq("gemma2-9b-it"),
-        // messages: [
-        //     ...messages,
-        //     // {
-        //     //     "role": "system",
-        //     //     "content": "",   
-        //     // }
-        // ],
-        prompt: //сокращённая прошедшая история
+        model: groq("compound-beta"),
         messages: [
-            messages[messages.length-1] //вроде то, что ввёл пользователь
+            {
+                role: "system",
+                content: `
+                    Вот сокращённая версия всех ранее произошедших событий партии: ${game.data.full_story}. 
+                    Ты должен остоваться в каноне прошлых событий.
+                    Ты не должен при каждом вопросе описывать все произошедшие события.
+                    Ты должен продолжать историю на основе происходящих событий.
+
+                    Ты должен предлагать варианты действий либо просить игрока предоставить свои варианты.
+                    Всегда, когда на действие требуется определённое мастерство ты должен посчитать вероятность успеха из рандомной цифры из брощеного кубика Д20 и характеристик персонажа и описывать неудачу
+                `
+            },
+            messages[messages.length-1], //последнее сообщение пользователя
         ]
     });
 
@@ -45,9 +51,9 @@ export async function POST(req: Request) {
     console.log("Cleaned text:", cleaned)
 
     const data = {
-        aiContent: ,
-        fullStory: ,
-        id: id
+        aiContent: "",
+        fullStory: cleaned,
+        id: gameId
     }
 
     axios.put(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/update`, data, {

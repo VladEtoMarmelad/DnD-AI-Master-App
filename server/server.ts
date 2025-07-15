@@ -1,6 +1,8 @@
 const express = require("express")
 const cors = require("cors")
+const fs = require("fs")
 const { Pool } = require('pg');
+const { textToSpeech } = require("../utils/lmnt") 
 require('dotenv').config();
 
 const app = express();
@@ -19,13 +21,35 @@ const pool = new Pool({
     idleTimeoutMillis: 30000,
 });
 
-const testConnection = async () => { 
-    const res = await pool.query("SELECT * FROM games")
-    return res.rows
-}
-
 app.get("/", async (req: any, res: any): Promise<void> => {
-    res.send(await testConnection())
+    try {
+        const gameId = req.query.gameId
+        const getGameByIDQuery = `
+            SELECT *
+            FROM games
+            WHERE id = $1
+        `
+        const result = await pool.query(getGameByIDQuery, [gameId])
+        res.status(200).send(result.rows[0])
+    } catch (error) {
+        console.error(error)
+        res.status(400)
+    }
+})
+
+app.get("/someGames", async (req: any, res: any): Promise<void> => {
+    try {
+        const getSomeGames = `
+            SELECT id
+            FROM games
+            LIMIT 100
+        `
+        const result = await pool.query(getSomeGames)
+        res.status(200).send({games: result.rows})
+    } catch (error) {
+        console.error(error)
+        res.status(404)
+    }
 })
 
 app.post("/insert", async (req: any, res: any): Promise<void> => {
@@ -47,8 +71,8 @@ app.put("/update", async (req: any, res: any): Promise<void> => {
         const { aiContent, fullStory, id } = req.body
         const updateQuery = `
             UPDATE games
-            SET ai_content = ai_content || ';$1',
-	        full_story = full_story || ';$2'
+            SET ai_content = ai_content || '; ' || $1,
+	        full_story = full_story || '; ' || $2
             WHERE id = $3;
         `
         pool.query(updateQuery, [aiContent, fullStory, id])
@@ -59,5 +83,18 @@ app.put("/update", async (req: any, res: any): Promise<void> => {
     }
 })
 
-//app.listen(3000,() => console.log('API listening on port 3000'))
+app.post("/textToSpeech", async (req: any, res: any) => {
+    try {
+        const speech = await textToSpeech(req.body.text)
+
+        const buffer = Buffer.from(speech.audio, "base64");
+        await fs.writeFile("./assets/audios/lastSpeech.mp3", buffer);
+
+        res.status(204).end();
+    } catch (error) {
+        console.error(error)
+        res.status(500).send("Server error");
+    }
+})
+
 app.listen(port, host, () => console.log('API listening on port 3000'))
