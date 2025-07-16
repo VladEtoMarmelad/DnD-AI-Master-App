@@ -3,20 +3,16 @@ import axios from "axios";
 import { Link, useRouter } from "expo-router";
 import 'expo-router/entry';
 import { useEffect, useState } from "react";
-import { FlatList, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Platform, Text, TouchableOpacity, View } from "react-native";
 
 const HomeScreen = () => {
 	const router = useRouter();
-	const [games, setGames] = useState(null)
+	const [games, setGames] = useState<any[]|null>(null)
+	const [allGamesAmount, setAllGamesAmount] = useState(0)
+	const [showGames, setShowGames] = useState(Platform.OS === "web" ? true : false)
 
 	useEffect(() => {
-		axios.get(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/someGames`)
-		.then(result => {
-			if (result.status === 200) {
-				console.log(result.data)
-				setGames(result.data.games)
-			}
-		})
+		getMoreGames()
 	}, [])
 
 	const startNewGame = async () => {
@@ -34,33 +30,64 @@ const HomeScreen = () => {
 		}
 	}
 
+	const getMoreGames = (): void => {
+		axios.get(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/someGames`, {
+			params: {amount: games ? games.length + 5 : 15}
+		})
+		.then(result => {
+			if (result.status === 200) {
+				setGames(result.data.games)
+				setAllGamesAmount(result.data.allGamesAmount)
+			}
+		})
+	}
+
 	if (!games) return <Text>Загрузка</Text>
 
 	return (
 		<View style={{width: '100%', height: '100%'}}>
-			<ScrollView style={styles.gamesContainer}>
+			{Platform.OS !== "web" &&
+				<TouchableOpacity 
+					onPress={() => setShowGames(!showGames)}
+					style={{...styles.toggleGamesButton, left: 0}}
+				/>
+			}
+			{showGames &&
 				<FlatList 
 					data={games}
 					keyExtractor={game => game.id}
-					renderItem={({item: game}) => 
-						<Link 
-							href={{
-								pathname: "/game/[gameId]", 
-								params: {gameId: game.id} 
-							}}
-							style={styles.game}
-						>
-							game id: {game.id}
-						</Link>
+					style={styles.gamesContainer}
+					renderItem={({item: game, index}) => 
+						<View>
+							{index === 0 && Platform.OS !== "web" &&
+								<TouchableOpacity 
+									onPress={() => setShowGames(!showGames)}
+									style={styles.toggleGamesButton}
+								/>
+							}
+
+							<Link 
+								href={{
+									pathname: "/game/[gameId]", 
+									params: {gameId: game.id} 
+								}}
+								style={styles.game}
+							>
+								game id: {game.id}
+							</Link>
+
+							{index === games.length-1 && allGamesAmount > games.length &&
+								<TouchableOpacity
+									onPress={getMoreGames}
+									activeOpacity={0.75}
+									style={{...styles.button, marginHorizontal: 5}}
+								><Text style={{color: 'white'}}>Загрузить ещё...</Text></TouchableOpacity>
+							}
+						</View>
 					}
 				/>
-				<TouchableOpacity
-					activeOpacity={0.75}
-					style={styles.button}
-				>
+			}
 
-				</TouchableOpacity>
-			</ScrollView>
 			<View style={{display:'flex', flex:1, alignItems:'center', justifyContent:'center'}}>
 				<TouchableOpacity 
 					onPress={startNewGame}

@@ -42,10 +42,20 @@ app.get("/someGames", async (req: any, res: any): Promise<void> => {
         const getSomeGames = `
             SELECT id
             FROM games
-            LIMIT 100
+            LIMIT $1
         `
-        const result = await pool.query(getSomeGames)
-        res.status(200).send({games: result.rows})
+        const getGamesAmount = `
+            SELECT COUNT(*)
+            FROM games
+        `
+
+        const result = await pool.query(getSomeGames, [req.query.amount])
+        const gamesAmount = await pool.query(getGamesAmount)
+
+        res.status(200).send({
+            games: result.rows,
+            allGamesAmount: gamesAmount.rows[0].count
+        })
     } catch (error) {
         console.error(error)
         res.status(404)

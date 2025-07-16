@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
 	button: {
@@ -15,21 +15,35 @@ const styles = StyleSheet.create({
 		flex: 1,
 		top: 0,
 		left: 0,
-		zIndex: 10,
-		width: '12.5%',
+		zIndex: 100,
+		width: Platform.OS === "web" ? '12.5%': "75%",
 		height: '100%',
 		flexDirection: 'column',
-		paddingRight: 25,
 		borderRightWidth: 1,
 		borderStyle: 'solid',
-		borderRightColor: 'black'
+		borderRightColor: 'black',
+		backgroundColor: '#f2f2f2'
 	},
 	game: {
 		padding: 10,
 		marginVertical: 7.5,
-		marginHorizontal: 5,
-		borderRadius: 25,
+		marginLeft: 5,
+		marginRight: Platform.OS !== "web" ? 75 : 5,
+		borderRadius: 15,
 		backgroundColor: 'gray'
+	},
+	toggleGamesButton: {
+		position: 'absolute',
+		top: 0,
+		right: 0,
+		width: 15,
+		height: 15,
+		padding: 25,
+		borderWidth: 1,
+		borderColor: 'black',
+		borderStyle: 'solid',
+		borderRadius: 15,
+		backgroundColor: 'black'
 	}
 })
 
