@@ -1,13 +1,17 @@
+import styles from '@/styles/GameScreenStyles';
+import { themeStyleUser } from '@/utils/themeStyleUser';
 import { generateAPIUrl } from '@/utils/utils';
 import { useChat } from '@ai-sdk/react';
 import axios from 'axios';
 import { createAudioPlayer } from 'expo-audio';
 import { useLocalSearchParams } from 'expo-router';
 import { fetch as expoFetch } from 'expo/fetch';
-import { SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, ScrollView, Text, TextInput, TouchableOpacity, View, useColorScheme } from 'react-native';
 
 const GameScreen = () => {
 	const searchParams = useLocalSearchParams();
+	const colorScheme = useColorScheme();
+
 	const { messages, error, handleInputChange, input, handleSubmit } = useChat({
 		fetch: expoFetch as unknown as typeof globalThis.fetch,
 		api: generateAPIUrl('/api/chat'),
@@ -32,22 +36,28 @@ const GameScreen = () => {
         }
     }
 
-	if (error) return <Text>{error.message}</Text>;
+	const themeUserMessageStyle = themeStyleUser(colorScheme, styles, "UserMessage")
+	const themeAssistantMessageStyle = themeStyleUser(colorScheme, styles, "AssistantMessage")
+	const themeSoundButtonStyle = themeStyleUser(colorScheme, styles, "SoundButton")
+	const themePromptInputStyle = themeStyleUser(colorScheme, styles, "PromptInput")
+	const themeTextStyle = themeStyleUser(colorScheme, styles, "Text")
 
+	if (error) return <Text>{error.message}</Text>;
+	//161440
 	return (
-		<SafeAreaView style={{height: '100%', backgroundColor:'black'}}>
+		<SafeAreaView style={{height: '100%', backgroundColor: colorScheme === "light" ? '#f2f2f2' : '#232323'}}>
 			<View
 				style={{
 					height: '95%',
 					display: 'flex',
 					flexDirection: 'column',
-					paddingHorizontal: 8,
 				}}
 			>
 				<View style={{marginTop: 8}}>
 					<TextInput
-						style={{backgroundColor: 'white', padding: 8 }}
-						placeholder="Say something..."
+						style={[styles.promptInput, themePromptInputStyle]}
+						placeholder="Скажите что-то..."
+						placeholderTextColor={colorScheme === "light" ? 'black' : 'white'}
 						value={input}
 						onChange={e =>
 							handleInputChange({
@@ -66,32 +76,29 @@ const GameScreen = () => {
 					/>
 				</View>
 
-				<ScrollView style={{ flex: 1 }}>
+				<ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
 					{messages.map(m => (
 						<View key={m.id} style={{ marginVertical: 25}}>
-							<View>
-								<Text style={{ 
+							<View style={m.role === "assistant" ? [styles.assistantMessage, themeAssistantMessageStyle] : [styles.userMessage, themeUserMessageStyle]}>
+								<Text style={{
+									...themeTextStyle,
 									fontWeight: 700, 
-									color: m.role === "assistant" ? "#00FF00" : "white"
+									fontSize: 25,
 								}}>{m.role === "assistant" ? "ИИ Мастер" : "Я"}</Text>
+
 								<Text 
 									style={{
-										color: m.role === "user" ? "goldenrod" : "#006400",
-										fontSize: 20
+										...themeTextStyle,
+										fontSize: 20,
+										marginTop: 30
 									}}
 								>{m.content}</Text>
-							</View>
-							<View>
+
 								<TouchableOpacity
 									onPress={() => playSomeText(m.content)}
-									style={{
-										padding: 25,
-										borderWidth: 3,
-										borderStyle: 'solid',
-										borderColor: 'black',
-									}}
+									style={[styles.soundButton, themeSoundButtonStyle]}
 								>
-									<Text style={{color: "white"}}>Звук</Text>
+									<Text style={{...themeTextStyle, alignSelf: 'center'}}>Произнести текст</Text>
 								</TouchableOpacity>
 							</View>
 						</View>

@@ -3,10 +3,11 @@ import axios from "axios";
 import { Link, useRouter } from "expo-router";
 import 'expo-router/entry';
 import { useEffect, useState } from "react";
-import { FlatList, Platform, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Platform, Text, TouchableOpacity, View, useColorScheme } from "react-native";
 
 const HomeScreen = () => {
 	const router = useRouter();
+	const colorScheme = useColorScheme();
 	const [games, setGames] = useState<any[]|null>(null)
 	const [allGamesAmount, setAllGamesAmount] = useState(0)
 	const [showGames, setShowGames] = useState(Platform.OS === "web" ? true : false)
@@ -14,6 +15,10 @@ const HomeScreen = () => {
 	useEffect(() => {
 		getMoreGames()
 	}, [])
+
+	const themeTextStyle = colorScheme === "light" ? styles.lightThemeText : styles.darkThemeText
+	const themeButtonStyle = colorScheme === "light" ? styles.ligthThemeButton : styles.darkThemeButton;
+	const themeGamesContainerStyle = colorScheme === "light" ? styles.lightThemeGamesContainer : styles.darkThemeGamesContainer 
 
 	const startNewGame = async () => {
 		const result = await axios.post(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/insert`, {"fullText": ""}, {
@@ -42,11 +47,15 @@ const HomeScreen = () => {
 		})
 	}
 
-	if (!games) return <Text>Загрузка</Text>
+	if (!games) return <Text style={themeTextStyle}>Загрузка</Text>
 
 	return (
-		<View style={{width: '100%', height: '100%'}}>
-			{Platform.OS !== "web" &&
+		<View style={{
+			width: '100%',
+			height: '100%', 
+			backgroundColor: colorScheme === "light" ? "#f2f2f2" : "#232323"
+		}}>
+			{Platform.OS !== "web" && games.length > 0 &&
 				<TouchableOpacity 
 					onPress={() => setShowGames(!showGames)}
 					style={{...styles.toggleGamesButton, left: 0}}
@@ -56,7 +65,8 @@ const HomeScreen = () => {
 				<FlatList 
 					data={games}
 					keyExtractor={game => game.id}
-					style={styles.gamesContainer}
+					showsVerticalScrollIndicator={false}
+					style={[styles.gamesContainer, themeGamesContainerStyle]}
 					renderItem={({item: game, index}) => 
 						<View>
 							{index === 0 && Platform.OS !== "web" &&
@@ -76,11 +86,11 @@ const HomeScreen = () => {
 								game id: {game.id}
 							</Link>
 
-							{index === games.length-1 && allGamesAmount > games.length &&
+							{index === games.length-1 && allGamesAmount > games.length && games.length > 0 &&
 								<TouchableOpacity
 									onPress={getMoreGames}
 									activeOpacity={0.75}
-									style={{...styles.button, marginHorizontal: 5}}
+									style={{...styles.button, ...themeButtonStyle, marginHorizontal: 5, padding: 10}}
 								><Text style={{color: 'white'}}>Загрузить ещё...</Text></TouchableOpacity>
 							}
 						</View>
@@ -92,7 +102,7 @@ const HomeScreen = () => {
 				<TouchableOpacity 
 					onPress={startNewGame}
 					activeOpacity={0.75}
-					style={styles.button}
+					style={[styles.button, themeButtonStyle]}
 				>
 					<Text style={{color: 'white'}}>Начать новую партию</Text>
 				</TouchableOpacity>

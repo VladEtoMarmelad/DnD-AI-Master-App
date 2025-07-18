@@ -1,14 +1,24 @@
 import { Platform, StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
+	lightThemeText: {
+		color: 'black'
+	},
+	darkThemeText: {
+		color: 'white'
+	},
+
 	button: {
 		padding: 25,
-		borderWidth: 1,
-		borderColor: 'black',
-		borderStyle: 'solid',
 		borderRadius: 15,
+	},
+	ligthThemeButton: {
 		backgroundColor: 'black'
 	},
+	darkThemeButton: {
+		backgroundColor: '#333333'
+	},
+
 	gamesContainer: {
 		display: 'flex',
 		position: 'absolute',
@@ -20,17 +30,24 @@ const styles = StyleSheet.create({
 		height: '100%',
 		flexDirection: 'column',
 		borderRightWidth: 1,
-		borderStyle: 'solid',
+		borderStyle: 'solid'
+	},
+	lightThemeGamesContainer: {
 		borderRightColor: 'black',
 		backgroundColor: '#f2f2f2'
 	},
+	darkThemeGamesContainer: {
+		borderRightColor: 'gray',
+		backgroundColor: '#121212'
+	},
+	
 	game: {
 		padding: 10,
 		marginVertical: 7.5,
 		marginLeft: 5,
 		marginRight: Platform.OS !== "web" ? 75 : 5,
 		borderRadius: 15,
-		backgroundColor: 'gray'
+		backgroundColor: '#919191'
 	},
 	toggleGamesButton: {
 		position: 'absolute',
