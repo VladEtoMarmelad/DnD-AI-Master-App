@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
 		padding: 25,
 		borderRadius: 15,
 	},
-	ligthThemeButton: {
+	lightThemeButton: {
 		backgroundColor: 'black'
 	},
 	darkThemeButton: {

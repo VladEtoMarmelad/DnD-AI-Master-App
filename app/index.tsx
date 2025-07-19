@@ -1,4 +1,5 @@
 import styles from "@/styles/MainPageStyles";
+import { themeStyleUser } from "@/utils/themeStyleUser";
 import axios from "axios";
 import { Link, useRouter } from "expo-router";
 import 'expo-router/entry';
@@ -16,9 +17,9 @@ const HomeScreen = () => {
 		getMoreGames()
 	}, [])
 
-	const themeTextStyle = colorScheme === "light" ? styles.lightThemeText : styles.darkThemeText
-	const themeButtonStyle = colorScheme === "light" ? styles.ligthThemeButton : styles.darkThemeButton;
-	const themeGamesContainerStyle = colorScheme === "light" ? styles.lightThemeGamesContainer : styles.darkThemeGamesContainer 
+	const themeTextStyle = themeStyleUser(colorScheme, styles, "Text")
+	const themeButtonStyle = themeStyleUser(colorScheme, styles, "Button")
+	const themeGamesContainerStyle = themeStyleUser(colorScheme, styles, "GamesContainer")
 
 	const startNewGame = async () => {
 		const result = await axios.post(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000/insert`, {"fullText": ""}, {
