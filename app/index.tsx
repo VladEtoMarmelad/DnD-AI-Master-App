@@ -26,7 +26,6 @@ const HomeScreen = () => {
 				"Content-Type": "application/json"
 			}
     	})
-		console.log("resultFromFronrend:", result)
 		if (result.status === 201) {
 			router.push({
 				pathname: "/game/[gameId]", 

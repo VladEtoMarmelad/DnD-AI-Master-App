@@ -5,8 +5,6 @@ import axios from 'axios';
 export async function POST(req: Request) {
     const { messages, gameId } = await req.json();
 
-    console.log("Вроде то, что ввёл пользователь:", JSON.stringify(messages[messages.length-1], null, 4))
-
     const game = await axios.get(`http://${process.env.EXPO_PUBLIC_IP_ADDRESS}:3000`, {
         params: {gameId}
     })
@@ -48,10 +46,7 @@ export async function POST(req: Request) {
         .replace(/\\n/g, '') // Удалить \n
         .replace(/\\"/g, '"') // Преобразовать экранированные кавычки
 
-    console.log("Cleaned text:", cleaned)
-
     const data = {
-        aiContent: "",
         fullStory: cleaned,
         id: gameId
     }

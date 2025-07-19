@@ -65,10 +65,8 @@ app.get("/someGames", async (req: any, res: any): Promise<void> => {
 app.post("/insert", async (req: any, res: any): Promise<void> => {
     try {
         const { fullText } = req.body
-        console.log(fullText)
-        const insertQuery = "INSERT INTO games (ai_content, full_story) VALUES ($1, $2) RETURNING *"
-        const result = await pool.query(insertQuery, ["...", fullText])
-        console.log("result:", result)
+        const insertQuery = "INSERT INTO games (full_story) VALUES ($1) RETURNING *"
+        const result = await pool.query(insertQuery, [fullText])
         res.status(201).send({id: result.rows[0].id})
     } catch (error) {
        console.error(error)
@@ -78,14 +76,13 @@ app.post("/insert", async (req: any, res: any): Promise<void> => {
 
 app.put("/update", async (req: any, res: any): Promise<void> => {
     try {
-        const { aiContent, fullStory, id } = req.body
+        const { fullStory, id } = req.body
         const updateQuery = `
             UPDATE games
-            SET ai_content = ai_content || '; ' || $1,
-	        full_story = full_story || '; ' || $2
-            WHERE id = $3;
+            SET full_story = full_story || '; ' || $1
+            WHERE id = $2;
         `
-        pool.query(updateQuery, [aiContent, fullStory, id])
+        pool.query(updateQuery, [fullStory, id])
         res.status(200)
     } catch (error) {
         console.error(error)

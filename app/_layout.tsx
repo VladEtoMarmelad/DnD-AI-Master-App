@@ -9,7 +9,8 @@ export default function RootLayout() {
 			headerStyle: {
 				backgroundColor: colorScheme === "light" ? '#f2f2f2' : '#232323'
 			},
-			headerTintColor: colorScheme === "light" ? 'black' : 'white'	
+			headerTintColor: colorScheme === "light" ? 'black' : 'white',
+			title: "Title"	
 		}}>
 			<Stack.Screen 
 				name="index"
