@@ -1,8 +1,11 @@
-const express = require("express")
-const cors = require("cors")
-const fs = require("fs")
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
+const axios = require("axios");
 const { Pool } = require('pg');
-const { textToSpeech } = require("../utils/lmnt") 
+const { textToSpeech } = require("../utils/lmnt");
+const { createGroq } = require("@ai-sdk/groq");
+const { streamText, getErrorMessage } = require("ai");
 require('dotenv').config();
 
 const app = express();
@@ -20,6 +23,8 @@ const pool = new Pool({
     port: Number(process.env.DB_PORT),
     idleTimeoutMillis: 30000,
 });
+
+const groq = createGroq({apiKey: process.env.GROQ_API_KEY});
 
 app.get("/", async (req: any, res: any): Promise<void> => {
     try {
@@ -104,4 +109,40 @@ app.post("/textToSpeech", async (req: any, res: any) => {
     }
 })
 
-app.listen(port, host, () => console.log('API listening on port 3000'))
+app.post("/chat", async (req: any, res: any) => {
+    const { messages, gameId } = req.body;
+
+    try {
+        const game = await axios.get(`http://${host}:3000`, {params: {gameId}})
+
+        let result = streamText({
+            model: groq("compound-beta"),
+            messages: [
+                {
+                    role: "system",
+                    content: `
+                        Вот сокращённая версия всех ранее произошедших событий партии: ${game.data.full_story}. 
+                        Ты должен остоваться в каноне прошлых событий.
+                        Ты не должен при каждом вопросе описывать все произошедшие события.
+                        Ты должен продолжать историю на основе происходящих событий.
+
+                        Ты должен предлагать варианты действий либо просить игрока предоставить свои варианты.
+                        Всегда, когда на действие требуется определённое мастерство ты должен посчитать вероятность успеха из рандомной цифры из брощеного кубика Д20 и характеристик персонажа и описывать неудачу
+                    `
+                },
+                messages[messages.length-1], //last user's message
+            ],
+            async onError(error: any) {
+                console.error("Ошибка во время стриминга:", error);
+            },
+        });
+
+        result.pipeDataStreamToResponse(res)
+    } catch (error) {
+        console.error(error)
+        const errorMessage = getErrorMessage(error);
+        res.status(500).json({error: errorMessage});
+    }
+})
+
+app.listen(port, host, () => console.log("API listening on port 3000"))
